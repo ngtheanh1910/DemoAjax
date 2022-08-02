@@ -1,0 +1,139 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css" integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous" />
+    <link rel="stylesheet" href="~/style.css">
+    <title>Index</title>
+</head>
+<body>
+    <div class="container">
+        <form action="#">
+            <input type="text" placeholder="Enter some task" id="title">
+            <button id="btnAdd">Add</button>
+            <button id="btnEdit" style="background-color:red; display: none">Edit</button>
+        </form>
+        <ul class="todos">
+
+        </ul>
+    </div>
+</body>
+</html>
+
+<script src="~/Scripts/jquery-3.4.1.min.js"></script>
+
+<script type="text/javascript">
+        LoadData();
+        $("#btnAdd").click(function (event) {
+            event.preventDefault();
+            let value = document.querySelector('#title').value;
+            if (value == '') {
+                return;
+            }
+            var data = {
+                t: value
+            };
+            $.ajax({
+                type: "POST",
+                url: '/Home/CreateTask',
+                data: data,
+                success: function (res) {
+                    LoadData();
+                    $('#title').val('');
+                },
+                error: function () {
+                    alert("Error while inserting data");
+                }
+            });
+        });
+
+        //<i class="fas fa-pen" onclick="editItem(${item.id})"></i>
+        //<input type="text" id="edit" style="display:none; width:100%; padding: 5px 10px;">
+        function LoadData() {
+            $(".todos li").remove();
+            $.ajax({
+                type: 'GET',
+                url: '/Home/ShowTask',
+                dataType: 'json',
+                data: { id: '' },
+                success: function (data) {
+                    list = data;
+                    var items = '';
+                    $.each(data, function (i, item) {
+                        var rows = `
+                            <li onclick="editItem(${item.id})">
+                                <span class="edited">${item.title}</span>
+                                <div>
+                                    <i class="far fa-trash-alt" onclick="deleteItem(${item.id})"></i>
+                                </div>
+                            </li>
+                    `
+                        $('.todos').append(rows);
+                       
+                        $('ul.todos li').click(function () {
+                            //alert($(this).find("span.edited").text());
+                            var selected = $(this).find("span.edited").text();
+                            $("#title").val(selected);
+                        });
+                    });
+                },
+                error: function () {
+                    alert("Error while getting data");
+                }
+            });
+        }
+
+        function deleteItem(id) {
+            $.ajax({
+                type: "POST",
+                url: '/Home/DeleteTask',
+                data: { id: id },
+                success: function (res) {
+                    LoadData();
+                },
+                error: function () {
+                    alert("Error while inserting data");
+                }
+            });
+        }
+
+                        
+
+    function editItem(id) {
+        $("#btnAdd").hide();
+        $("#btnEdit").show();       
+        
+        $("#btnEdit").click(function (event) {
+            let value = document.querySelector('#title').value;
+
+             event.preventDefault();            
+            if (value == '') {
+                return;
+            }
+            var data = {
+                id: id,
+                t: value
+             };
+             $.ajax({
+                type: "POST",
+                url: '/Home/EditTask',
+                data: data,
+                //dataType: "json",
+                //contentType: "application/json; charset=utf-8",
+                 success: function (res) {
+                    LoadData();
+                     $('#title').val('');                     
+                },
+                error: function () {
+                    alert("Error while inserting data");
+                }
+            });
+        });       
+    }
+</script>
